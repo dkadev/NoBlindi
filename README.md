@@ -62,6 +62,11 @@ python3 NoBlindi.py -u https://www.attacker.com/login -uf 'username' -pf passwor
 python3 NoBlindi.py -u https://www.attacker.com/login -uf 'username' -pf password --username 'admin' -b '{"username":"", "password":""}' -success_code 200 -f "Invalid username or password"
 ```
 
+### Check if the website is live before attempting login:
+```
+python3 NoBlindi.py -u https://www.attacker.com/login -uf 'username' -pf password --username 'admin' -b '{"username":"", "password":""}' --check-website
+```
+
 <br>
 
 ## Portswigger Lab

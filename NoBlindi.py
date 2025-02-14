@@ -3,6 +3,7 @@ import string
 import argparse
 import json
 import platform
+import socket
 from typing import Dict
 
 # Constants
@@ -46,6 +47,7 @@ def create_parser() -> argparse.ArgumentParser:
     parser.add_argument('-hv', '--header_value', help="Expected value for the specified success header.")
     parser.add_argument('-f', '--failure_message', help="String in the response body that indicates a failed login attempt.")
     parser.add_argument('-r', '--redirect', action='store_false', help="Prevent redirects. By default, redirects are allowed.")
+    parser.add_argument('--check-website', action='store_true', help="Check if the website is live before attempting login.")
 
     
     return parser
@@ -73,11 +75,16 @@ def is_website_live(url: str) -> bool:
     Check if the website is accessible.
     """
     try:
-        response = requests.get(url)
+        response = requests.head(url)
         return response.status_code == 200
-    except requests.RequestException as e:
-        print(f"Failed to connect to {url}: {e}")
-        return False
+    except requests.RequestException:
+        try:
+            host = url.split("//")[-1].split("/")[0]
+            port = 443 if url.startswith("https://") else 80
+            socket.create_connection((host, port), timeout=5)
+            return True
+        except (socket.timeout, socket.error):
+            return False
 
 def is_login_successful(response: requests.Response, args: argparse.Namespace) -> bool:
     """
@@ -105,7 +112,7 @@ def main():
         return
     
     # check if the website live
-    if not is_website_live(args.url):
+    if args.check_website and not is_website_live(args.url):
         print("[ERR] Failed to connect to the website.")
         exit(1)
 
